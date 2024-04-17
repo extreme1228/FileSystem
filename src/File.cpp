@@ -63,6 +63,7 @@ File* OpenFiles::GetF(int fd)
 	pFile = this->ProcessOpenFileTable[fd];
 	if(pFile == NULL)
 	{
+		// printf("debuf not find\n");
 		u.u_error = User::ENOENT;
 	}
 

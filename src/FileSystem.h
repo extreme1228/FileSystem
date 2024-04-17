@@ -56,7 +56,7 @@ public:
 
 	static const int SUPER_BLOCK_SECTOR_NUMBER = 0;	/* 定义SuperBlock位于磁盘上的扇区号，占据0,1两个扇区。 */
 
-	static const int ROOTINO = 1;			/* 文件系统根目录外存Inode编号 */
+	static const int ROOTINO = 0;			/* 文件系统根目录外存Inode编号 */
 
 	static const int INODE_NUMBER_PER_SECTOR = 8;		/* 外存INode对象长度为64字节，每个磁盘块可以存放512/64 = 8个外存Inode */
 	static const int INODE_ZONE_START_SECTOR = 2;		/* 外存Inode区位于磁盘上的起始扇区号 */

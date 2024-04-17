@@ -133,7 +133,7 @@ Inode* InodeTable::IGet(int inumber)
 					this->IPut(pInode);
 					return NULL;
 				}
-
+				// printf("icopy\n");
 				/* 将缓冲区中的外存Inode信息拷贝到新分配的内存Inode中 */
 				pInode->ICopy(pBuf, inumber);
 				/* 释放缓存 */

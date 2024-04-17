@@ -16,6 +16,7 @@ class DeviceManager
 {
 private:
 	static const char* DISK_FILE_NAME;	/* 磁盘文件名 */
+	static const int BLOCK_SIZE = 512;
 
 	FILE * m_DiskFile;		/* 磁盘文件指针 */
 public:

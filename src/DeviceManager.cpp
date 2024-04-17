@@ -2,7 +2,7 @@
 #include "FileSystem.h"
 #include "string.h"
 
-const char* DeviceManager::DISK_FILE_NAME = "FileSystem.img";
+const char* DeviceManager::DISK_FILE_NAME = "1.img";
 
 DeviceManager::DeviceManager()
 {
@@ -30,7 +30,7 @@ void DeviceManager::Initialize()
         return;
     }
     else{
-        //SuperBlock区域初始化
+        // SuperBlock区域初始化
         SuperBlock m_spb;
         fwrite(&m_spb, sizeof(SuperBlock), 1, m_DiskFile);
 
@@ -42,6 +42,7 @@ void DeviceManager::Initialize()
                 //根目录Inode初始化
                 tmp_inode.d_mode |= Inode::IFDIR | Inode::IALLOC | Inode::IEXEC;
 				tmp_inode.d_nlink = 1;
+                // printf("tmp_mode=%d\n",tmp_inode.d_mode);
             }
             fwrite(&tmp_inode, sizeof(DiskInode), 1, m_DiskFile);
         }
@@ -80,6 +81,7 @@ void DeviceManager::Initialize()
         //最后重新将SuperBlock写回
         fseek(m_DiskFile, 0, SEEK_SET);
         fwrite(&m_spb, sizeof(SuperBlock), 1, m_DiskFile);
+
     }
 }
 

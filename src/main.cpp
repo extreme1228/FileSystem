@@ -28,7 +28,7 @@ void Init()
     strcpy(u->u_curdir, "/");
 	u->u_dirp = "/";
     //根目录的inode初始化出来不一样
-    printf("flag=%d\n",u->u_cdir->i_mode);
+    // printf("user_mode=%d\n",u->u_cdir->i_mode);
 	memset(u->u_arg, 0, sizeof(u->u_arg));
 	printf("INITIALIZING DONE!\n");
 }
@@ -41,7 +41,7 @@ int main()
     const char* computerName = std::getenv("COMPUTERNAME");
     Command cmd;
     //内核启动，进行初始化相关工作
-    printf("\nWelcome!\n");
+    printf("Welcome!\n");
     printf("You can type \"help\" to get more information about the filesystem!\n");
     while(true){
         printf("root@%s:~%s$ ",computerName,u->u_curdir);

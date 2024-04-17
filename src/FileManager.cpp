@@ -76,13 +76,16 @@ void FileManager::Creat()
 	}
 	else
 	{
+		//change 
 		/* 如果NameI()搜索到已经存在要创建的文件，则清空该文件（用算法ITrunc()）。UID没有改变
 		 * 原来UNIX的设计是这样：文件看上去就像新建的文件一样。然而，新文件所有者和许可权方式没变。
 		 * 也就是说creat指定的RWX比特无效。
 		 * 邓蓉认为这是不合理的，应该改变。
 		 * 现在的实现：creat指定的RWX比特有效 */
-		this->Open1(pInode, File::FWRITE, 1);
-		pInode->i_mode |= newACCMode;
+        //这里做出改动，如果创建的文件已经存在，不应该覆盖，而应该给用户提示
+        u.u_error = User::EEXIST;
+        // this->Open1(pInode, File::FWRITE, 1);
+        // pInode->i_mode |= newACCMode;
 	}
 }
 
@@ -288,6 +291,7 @@ void FileManager::Rdwr( enum File::FileFlags mode )
 	{
 		/* 不存在该打开文件，GetF已经设置过出错码，所以这里不需要再设置了 */
 		/*	u.u_error = User::EBADF;	*/
+		// printf("debug_null\n");
 		return;
 	}
 
@@ -303,12 +307,14 @@ void FileManager::Rdwr( enum File::FileFlags mode )
 	u.u_IOParam.m_Count = u.u_arg[2];		/* 要求读/写的字节数 */
 	u.u_segflg = 0;		/* User Space I/O，读入的内容要送数据段或用户栈段 */
 	
+	
     /* 普通文件读写 ，或读写特殊文件。对文件实施互斥访问，互斥的粒度：每次系统调用。
 	为此Inode类需要增加两个方法：NFlock()、NFrele()。
 	这不是V6的设计。read、write系统调用对内存i节点上锁是为了给实施IO的进程提供一致的文件视图。*/
 	{
 		/* 设置文件起始读位置 */
 		u.u_IOParam.m_Offset = pFile->f_offset;
+		// printf("abcd %d\n",pFile->f_offset);
 		if ( File::FREAD == mode )
 		{
 			pFile->f_inode->ReadI();
@@ -342,16 +348,16 @@ Inode* FileManager::NameI( char (*func)(), enum DirectorySearchMode mode )
 	 * 如果该路径是'/'开头的，从根目录开始搜索，
 	 * 否则从进程当前工作目录开始搜索。
 	 */
-	printf("dir=%s\n",u.u_curdir);
+	// printf("dir=%s\n",u.u_curdir);
 	pInode = u.u_cdir;
 
 	if ( '/' == (curchar = (*func)()) )
 	{
 		pInode = this->rootDirInode;
 	}
-	if ( (pInode->i_mode & Inode::IFMT) != Inode::IFDIR ){
-		printf("debugxxx\n");
-	}
+	// if ( (pInode->i_mode & Inode::IFMT) != Inode::IFDIR ){
+	// 	printf("debugxxx\n");
+	// }
 	/* 检查该Inode是否正在被使用，以及保证在整个目录搜索过程中该Inode不被释放 */
 	this->m_InodeTable->IGet(pInode->i_number);
 
@@ -385,7 +391,7 @@ Inode* FileManager::NameI( char (*func)(), enum DirectorySearchMode mode )
 		/* 如果要进行搜索的不是目录文件，释放相关Inode资源则退出 */
 		if ( (pInode->i_mode & Inode::IFMT) != Inode::IFDIR )
 		{
-			printf("debug666\n");
+			// printf("debug666\n");
 			u.u_error = User::ENOTDIR;
 			break;	/* goto out; */
 		}

@@ -97,6 +97,7 @@ Buf* BufferManager::Bread(int blkno)
 	/* 如果在设备队列中找到所需缓存，即B_DONE已设置，就不需进行I/O操作 */
 	if(bp->b_flags & Buf::B_DONE)
 	{
+		// printf("buffer find ok\n");
 		return bp;
 	}
 	/* 没有找到相应缓存，构成I/O读请求块 */

@@ -70,7 +70,7 @@ void Command::FFormat()
 void Command::mkdir(char*dir_name)
 {
 	User *u = &Kernel::Instance().GetUser();
-	printf("dir=%s\n",u->u_curdir);
+	// printf("dir=%s\n",u->u_curdir);
 	u->u_error = User::NOERROR;
 	u->system_ret = 0;
 	int defaultmode = 040755; //default newmode:- rwx r-w r-w
@@ -79,7 +79,7 @@ void Command::mkdir(char*dir_name)
 	u->u_arg[2] = 0;
 	FileManager *file_m = &Kernel::Instance().GetFileManager();
 	file_m->MkNod();
-	printf("error = %d\n",u->u_error);
+	// printf("error = %d\n",u->u_error);
 	if(u -> u_error == User::EEXIST){
 		printf("mkdir: cannot create directory \'%s\': File exists\n",dir_name);
 	}
@@ -111,17 +111,19 @@ void Command::cd()
 void Command::ls()
 {
 	User *u = &Kernel::Instance().GetUser();
+	u->u_error = User::NOERROR;
 	u -> system_ret = 0;
 	int fd = Fopen(u->u_curdir,File::FREAD);
-	char data[64];
+	//目录项大小为32
+	char data[32];
 	while(true){
-		if(Fread(fd,data,64) == 0)
+		if(Fread(fd,data,32) == 0)
 			break;
 		else{
 			DirectoryEntry *d = (DirectoryEntry*)data;
 			if(d->m_ino == 0)continue;
 			printf("%s\n",d->m_name);
-			memset(data,0,64);
+			memset(data,0,32);
 		}
 	}
 	Fclose(fd);
@@ -137,22 +139,16 @@ int Command::clear()
 int Command::Fcreat(char*file_name)
 {
 	User *u = &Kernel::Instance().GetUser();
+	u->u_error = User::NOERROR;
 	u ->system_ret = 0;
 	u -> u_dirp = file_name;
 	u -> u_arg[1] = 0777;
 	FileManager *file_m = &Kernel::Instance().GetFileManager();
 	//check if file_name exist?
-	file_m ->Open();
-	if(u->system_ret >= 0){
+	file_m -> Creat();
+	if( u->u_error == User::EEXIST){
 		//file exist
 		printf("file %s exist!\n",file_name);
-		file_m->Close();
-	}
-	else{
-		u ->system_ret = 0;
-		u -> u_dirp = file_name;
-		u -> u_arg[1] = 0777;
-		file_m -> Creat();
 	}
 	return u->system_ret;
 }
@@ -166,15 +162,15 @@ int Command::Fdelete(char*file_name)
 	FileManager *file_m = &Kernel::Instance().GetFileManager();
 	file_m ->UnLink();
 	if(u -> u_error == User::ENOENT){
-		printf("fdelete: cannot remove '%s': No such file or directory",file_name);
+		printf("fdelete: cannot remove '%s': No such file or directory\n",file_name);
 	}
 	return OK;
 }
 
 int Command::Fopen(char*file_name,int mode)
 {
-	
 	User *u = &Kernel::Instance().GetUser();
+	u->u_error = User::NOERROR;
 	u -> system_ret = 0;
 	u ->u_error = User::NOERROR;
 	u ->u_dirp = file_name;
@@ -187,6 +183,7 @@ int Command::Fopen(char*file_name,int mode)
 void Command::Fclose(int fd)
 {
 	User *u = &Kernel::Instance().GetUser();
+	u->u_error = User::NOERROR;
 	u->system_ret = 0;
 	u->u_arg[0] = fd;
 	FileManager *file_m = &Kernel::Instance().GetFileManager();
@@ -197,6 +194,7 @@ void Command::Fclose(int fd)
 int Command::Fread(int fd,char* data,int len)
 {
 	User *u = &Kernel::Instance().GetUser();
+	u->u_error = User::NOERROR;
 	u->system_ret = 0;
 	u->u_arg[0] = fd;
 	u->u_arg[1] = int(data);
@@ -209,19 +207,22 @@ int Command::Fread(int fd,char* data,int len)
 int Command::Fwrite(int fd,char* data,int len)
 {
 	User *u = &Kernel::Instance().GetUser();
+	u->u_error = User::NOERROR;
 	u->system_ret = 0;
 	u->u_arg[0] = fd;
 	u->u_arg[1] = int(data);
 	u->u_arg[2] = len;
 	FileManager *file_m = &Kernel::Instance().GetFileManager();
+	// printf("u_error=%d\n",u->u_error);
 	file_m -> Write();
-	
+	// printf("u_error=%d\n",u->u_error);
 	return u->system_ret;
 }
 
 int Command :: Flseek(int fd,int pos)
 {
 	User *u = &Kernel::Instance().GetUser();
+	u->u_error = User::NOERROR;
 	u->system_ret = 0;
 	u->u_arg[0] = fd;
 	u->u_arg[1] = pos;
@@ -235,6 +236,7 @@ void Command::Fin(char*out_file_name,char*in_file_name)
 {
 	int file_mode = 0777;
 	User *u = &Kernel::Instance().GetUser();
+	u->u_error = User::NOERROR;
 	u ->system_ret = 0;
 	u -> u_dirp = in_file_name;
 	u -> u_arg[1] = 0777;
@@ -340,13 +342,13 @@ int Command::analyze(char * buf)
 	}
 	else if(strcmp(buf,"fread") == 0){
 		int fd,len;
-		char data[1024];
+		char data[1024] = {0};
 		scanf("%d %d",&fd,&len);
 		Fread(fd,data,len);
 		if(u->u_error == User::EBADF){
 			printf("fd value is out of limit\n");
 		}
-		else if(u->u_error = User::ENOENT){
+		else if(u->u_error == User::ENOENT){
 			printf("No such or directory\n");
 		}
 		else{
@@ -363,7 +365,7 @@ int Command::analyze(char * buf)
 		if(u->u_error == User::EBADF){
 			printf("fd value is out of limit\n");
 		}
-		else if(u->u_error = User::ENOENT){
+		else if(u->u_error == User::ENOENT){
 			printf("No such or directory\n");
 		}
 		else{

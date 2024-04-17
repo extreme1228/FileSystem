@@ -65,10 +65,13 @@ void Inode::ReadI()
 		/* 传送到用户区的字节数量，取读请求的剩余字节数与当前字符块内有效字节数较小值 */
 		nbytes = Utility::Min(Inode::BLOCK_SIZE - offset /* 块内有效字节数 */, u.u_IOParam.m_Count);
 
+		// printf("debug_byte=%d\n",nbytes);
 		if( (this->i_mode & Inode::IFMT) != Inode::IFBLK )
 		{	/* 如果不是特殊块设备文件 */
 		
 			int remain = this->i_size - u.u_IOParam.m_Offset;
+			// printf("fize = %d\n",this->i_size);
+			// printf("offset = %d\n",u.u_IOParam.m_Offset);
 			/* 如果已读到超过文件结尾 */
 			if( remain <= 0)
 			{
@@ -86,7 +89,7 @@ void Inode::ReadI()
 			}
 			dev = this->i_dev;
 		}
-
+		// printf("read bn = %d\n",bn);
 		pBuf = bufMgr.Bread(bn);
 
 		/* 记录最近读取字符块的逻辑块号 */
@@ -162,9 +165,11 @@ void Inode::WriteI()
 			pBuf = bufMgr.Bread(bn);
 		}
 
+		// printf("write:bn = %d\n",bn);
 		/* 缓存中数据的起始写位置 */
 		unsigned char* start = pBuf->b_addr + offset;
-
+		// printf("offset=%d\n",offset);
+		// printf("debug_byte=%d\n",nbytes);
 		/* 写操作: 从用户目标区拷贝数据到缓冲区 */
 		Utility::IOMove(u.u_IOParam.m_Base, start, nbytes);
 
@@ -539,6 +544,7 @@ void Inode::ICopy(Buf *bp, int inumber)
 	this->i_uid = dInode.d_uid;
 	this->i_gid = dInode.d_gid;
 	this->i_size = dInode.d_size;
+	// printf("copy_mode=%d\n",this->i_mode);
 	for(int i = 0; i < 10; i++)
 	{
 		this->i_addr[i] = dInode.d_addr[i];

@@ -66,7 +66,6 @@ File* OpenFiles::GetF(int fd)
 		// printf("debuf not find\n");
 		u.u_error = User::ENOENT;
 	}
-
 	return pFile;	/* 即使pFile==NULL也返回它，由调用GetF的函数来判断返回值 */
 }
 

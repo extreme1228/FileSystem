@@ -36,35 +36,35 @@ void Command::exit()
 
 void Command::FFormat()
 {
-	printf("Are you sure to fromat the filesystem?(All data will be cleared in the disk)[y/n]\n");
-	char buf[64];
-	scanf("%s",buf);
-	if(strcmp(buf,"y") == 0){
-		printf("FileSystem Formatting...\n");
-		DeviceManager *device_m = &Kernel::Instance().GetDeviceManager();
-		device_m ->FormatDisk();
-		Kernel::Instance().Initialize();
-		printf("Initialize System...");
-		FileManager *fileManager = &Kernel::Instance().GetFileManager();
-		fileManager->rootDirInode = g_InodeTable.IGet(FileSystem::ROOTINO);
-		Kernel::Instance().GetFileSystem().LoadSuperBlock();
-		User *u = &Kernel::Instance().GetUser();
-		u->u_error = User::NOERROR;
-		u->u_cdir = g_InodeTable.IGet(FileSystem::ROOTINO);
-		u->u_pdir = NULL;
-		strcpy(u->u_curdir, "/");
-		u->u_dirp = "/";
-		memset(u->u_arg, 0, sizeof(u->u_arg));
-		printf("Done.\n");
-		return ;
-	}
-	else if(strcmp(buf,"n") == 0){
-		return ;
-	}
-	else{
-		printf("Unknown command \"%s\" !\n");
-		return ;
-	}
+	// printf("Are you sure to fromat the filesystem?(All data will be cleared in the disk)[y/n]\n");
+	// char buf[64];
+	// scanf("%s",buf);
+	// if(strcmp(buf,"y") == 0){
+	// 	printf("FileSystem Formatting...\n");
+	// 	DeviceManager *device_m = &Kernel::Instance().GetDeviceManager();
+	// 	device_m ->FormatDisk();
+	// 	Kernel::Instance().Initialize();
+	// 	printf("Initialize System...");
+	// 	FileManager *fileManager = &Kernel::Instance().GetFileManager();
+	// 	fileManager->rootDirInode = g_InodeTable.IGet(FileSystem::ROOTINO);
+	// 	Kernel::Instance().GetFileSystem().LoadSuperBlock();
+	// 	User *u = &Kernel::Instance().GetUser();
+	// 	u->u_error = User::NOERROR;
+	// 	u->u_cdir = g_InodeTable.IGet(FileSystem::ROOTINO);
+	// 	u->u_pdir = NULL;
+	// 	strcpy(u->u_curdir, "/");
+	// 	u->u_dirp = "/";
+	// 	memset(u->u_arg, 0, sizeof(u->u_arg));
+	// 	printf("Done.\n");
+	// 	return ;
+	// }
+	// else if(strcmp(buf,"n") == 0){
+	// 	return ;
+	// }
+	// else{
+	// 	printf("Unknown command \"%s\" !\n");
+	// 	return ;
+	// }
 }
 
 void Command::mkdir(char*dir_name)
@@ -146,13 +146,11 @@ int Command::Fcreat(char*file_name)
 	FileManager *file_m = &Kernel::Instance().GetFileManager();
 	//check if file_name exist?
 	file_m -> Creat();
-	if( u->u_error == User::EEXIST){
-		//file exist
-		printf("file %s exist!\n",file_name);
-	}
 	return u->system_ret;
 }
 
+//删除文件后，原来文件的fd好像不能够复用
+//这时候需要我们保证删除文件之前先close文件
 int Command::Fdelete(char*file_name)
 {
 	User *u = &Kernel::Instance().GetUser();
@@ -235,16 +233,8 @@ int Command :: Flseek(int fd,int pos)
 void Command::Fin(char*out_file_name,char*in_file_name)
 {
 	int file_mode = 0777;
-	User *u = &Kernel::Instance().GetUser();
-	u->u_error = User::NOERROR;
-	u ->system_ret = 0;
-	u -> u_dirp = in_file_name;
-	u -> u_arg[1] = 0777;
-	FileManager *file_m = &Kernel::Instance().GetFileManager();
-	//check if file_name exist?
-	file_m -> Creat();
-	int fd = u->system_ret;
-	char data [1024];
+	int fd = Fcreat(in_file_name);
+	char data [1024] = {0};
 	FILE *fp = fopen(out_file_name,"rb");
 	if(fp == NULL){
 		printf("file %s open error,no such file or dirctory\n",out_file_name);
@@ -253,6 +243,7 @@ void Command::Fin(char*out_file_name,char*in_file_name)
 	}
 	int num = fread(data,1,1024,fp);
 	while(num > 0){
+		// printf("debug\n");
 		Fwrite(fd,data,num);
 		num = fread(data,1,1024,fp);
 	}
@@ -262,21 +253,14 @@ void Command::Fin(char*out_file_name,char*in_file_name)
 }
 void Command::Fout(char*in_file_name,char*out_file_name)
 {
-	int file_mode = File::FREAD | File::FWRITE;
 	User *u = &Kernel::Instance().GetUser();
-	u -> system_ret = 0;
-	u ->u_error = User::NOERROR;
-	u ->u_dirp = in_file_name;
-	u -> u_arg[1] = file_mode;
-	FileManager *file_m = &Kernel::Instance().GetFileManager();
-	file_m ->Open();
-	if(u -> system_ret <0){
+	int file_mode = File::FREAD | File::FWRITE;
+	int fd = Fopen(in_file_name,file_mode);
+	if(u->u_error == User::ENOENT){
 		printf("file %s open error,no such file or dirctory\n",in_file_name);
-		printf("Fout failed\n");
-		return ;
+		return;	
 	}
-	char data[1024];
-	int fd = u->system_ret;
+	char data[1024] = {0};
 	FILE *fp = fopen(out_file_name,"wb");
 	int num = Fread(fd,data,1024);
 	while(num > 0){
@@ -313,6 +297,16 @@ int Command::analyze(char * buf)
 		char file_name[64];
 		scanf("%s",file_name);
 		Fcreat(file_name);
+		if( u->u_error == User::EEXIST){
+			//file exist
+			printf("file %s exist!\n",file_name);
+		}
+		else if(u -> system_ret <0){
+			printf("file %s ceate error\n",file_name);
+		}
+		else{
+			printf("file %s create correct, return fd = %d\n",file_name,u->system_ret);
+		}
 		return OK;
 	}
 	else if(strcmp(buf,"fdelete") == 0){
@@ -326,7 +320,7 @@ int Command::analyze(char * buf)
 		scanf("%s",file_name);
 		int file_mode = File::FREAD | File::FWRITE;
 		Fopen(file_name,file_mode);
-		if(u -> system_ret <0){
+		if(u->u_error == User::ENOENT){
 			printf("file %s open error,no such file or dirctory\n",file_name);
 		}
 		else{
@@ -350,6 +344,9 @@ int Command::analyze(char * buf)
 		}
 		else if(u->u_error == User::ENOENT){
 			printf("No such or directory\n");
+		}
+		else if(u->u_error == User::EACCES){
+			printf("Permission denied,do not have access to read\n");
 		}
 		else{
 			printf("Read succeesfully,read data:\n");
@@ -380,7 +377,7 @@ int Command::analyze(char * buf)
 		if(u->u_error == User::EBADF){
 			printf("fd value is out of limit\n");
 		}
-		else if(u->u_error = User::ENOENT){
+		else if(u->u_error == User::ENOENT){
 			printf("No such or directory\n");
 		}
 		else{

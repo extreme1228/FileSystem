@@ -139,6 +139,7 @@ void Inode::WriteI()
 		offset = u.u_IOParam.m_Offset % Inode::BLOCK_SIZE;
 		nbytes = Utility::Min(Inode::BLOCK_SIZE - offset, u.u_IOParam.m_Count);
 
+		// printf("lbn = %d\n",lbn);
 		if( (this->i_mode & Inode::IFMT) != Inode::IFBLK )
 		{	/* 普通文件 */
 
@@ -185,7 +186,7 @@ void Inode::WriteI()
 		else if( (u.u_IOParam.m_Offset % Inode::BLOCK_SIZE) == 0 )	/* 如果写满一个字符块 */
 		{
 			/* 以异步方式将字符块写入磁盘，进程不需等待I/O操作结束，可以继续往下执行 */
-			bufMgr.Bawrite(pBuf);
+			bufMgr.Bwrite(pBuf);
 		}
 		else /* 如果缓冲区未写满 */
 		{

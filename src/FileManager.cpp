@@ -37,6 +37,7 @@ void FileManager::Open()
 	/* 没有找到相应的Inode */
 	if ( NULL == pInode )
 	{
+		u.u_error = User::ENOENT;
 		return;
 	}
 	this->Open1(pInode, u.u_arg[1], 0);
@@ -190,12 +191,13 @@ void FileManager::Seek()
 	User& u = Kernel::Instance().GetUser();
 	int fd = u.u_arg[0];
 
+	// printf("pFile = %s\n",pFile);
 	pFile = u.u_ofiles.GetF(fd);
 	if ( NULL == pFile )
 	{
 		return;  /* 若FILE不存在，GetF有设出错码 */
 	}
-
+	// printf("error_code = %d\n",u.u_error);
 	int offset = u.u_arg[1];
 
 	/* 如果u.u_arg[2]在3 ~ 5之间，那么长度单位由字节变为512字节 */

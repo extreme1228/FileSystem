@@ -46,9 +46,10 @@ Buf* BufferManager::GetBlk(int blkno)
 	
     //循环在队列里寻找目标块
     for(bp = dp->b_forw; bp != (Buf *)dp; bp = bp->b_forw){
-        if(bp->b_blkno == blkno ){
-            return bp;
-        }
+        if(bp->b_blkno != blkno)continue;
+
+		bp->b_flags |= Buf::B_BUSY;
+		return bp;
     }
     //如果没有找到目标块，就在自由队列里找一个空闲块
 	bp = this->bFreeList.b_forw;
@@ -56,7 +57,7 @@ Buf* BufferManager::GetBlk(int blkno)
 	/* 如果该字符块是延迟写，将其异步写到磁盘上 */
 	if(bp->b_flags & Buf::B_DELWRI)
 	{
-		bp->b_flags |= Buf::B_ASYNC;
+		// bp->b_flags |= Buf::B_ASYNC;
 		this->Bwrite(bp);
 	}
 	/* 注意: 这里清除了所有其他位，只设了B_BUSY */
@@ -140,8 +141,17 @@ void BufferManager::Bwrite(Buf *bp)
 void BufferManager::Bdwrite(Buf *bp)
 {
 	/* 置上B_DONE允许其它进程使用该磁盘块内容 */
-	bp->b_flags |= (Buf::B_DELWRI | Buf::B_DONE);
-	this->Brelse(bp);
+    bp->b_flags |= (Buf::B_DELWRI | Buf::B_DONE);
+    bp->b_wcount = BufferManager::BUFFER_SIZE;
+    this->Brelse(bp);
+
+    bp->b_back->b_forw = bp->b_forw;
+    bp->b_forw->b_back = bp->b_back;
+
+    bp->b_back = this->bFreeList.b_back;
+    this->bFreeList.b_back->b_forw = bp;
+    bp->b_forw = &this->bFreeList;
+    this->bFreeList.b_back = bp;
 	return;
 }
 

@@ -374,6 +374,7 @@ void Inode::IUpdate(int time)
 
 	/* 当IUPD和IACC标志之一被设置，才需要更新相应DiskInode
 	 * 目录搜索，不会设置所途径的目录文件的IACC和IUPD标志 */
+	// printf("debug1\n");
 	if( (this->i_flag & (Inode::IUPD | Inode::IACC))!= 0 )
 	{
 		if( filesys.GetFS()->s_ronly != 0 )
@@ -415,6 +416,7 @@ void Inode::IUpdate(int time)
 		/* 用dInode中的新数据覆盖缓存中的旧外存Inode */
 		Utility::DWordCopy( (int *)pNode, (int *)p, sizeof(DiskInode)/sizeof(int) );
 
+		// printf("debug2\n");
 		/* 将缓存写回至磁盘，达到更新旧外存Inode的目的 */
 		bufMgr.Bwrite(pBuf);
 	}

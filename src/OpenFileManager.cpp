@@ -190,6 +190,7 @@ void InodeTable::UpdateInodeTable()
 		 */
 		if( this->m_Inode[i].i_count != 0 )
 		{
+			// printf("debug inode id = %d\n",i);
 			this->m_Inode[i].IUpdate(time(0));
 
 		}

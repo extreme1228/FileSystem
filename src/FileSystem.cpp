@@ -263,8 +263,8 @@ Buf* FileSystem::Alloc()
 
 
 	/* 从索引表“栈顶”获取空闲磁盘块编号 */
+	
 	blkno = m_spb->s_free[--m_spb->s_nfree];
-
 	/* 
 	 * 若获取磁盘块编号为零，则表示已分配尽所有的空闲磁盘块。
 	 * 或者分配到的空闲磁盘块编号不属于数据盘块区域中(由BadBlock()检查)，
@@ -290,9 +290,8 @@ Buf* FileSystem::Alloc()
 		/* 从该磁盘块的0字节开始记录，共占据4(s_nfree)+400(s_free[100])个字节 */
 		int* p = (int *)pBuf->b_addr;
 
-		/* 首先读出空闲盘块数s_nfree */
+		/* 首先读出空闲盘块数s_nfree */	
 		m_spb->s_nfree = *p++;
-
 		/* 读取缓存中后续位置的数据，写入到SuperBlock空闲盘块索引表s_free[100]中 */
 		Utility::DWordCopy(p, m_spb->s_free, 100);
 

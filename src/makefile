@@ -1,6 +1,6 @@
 # FileSystem
 CC = g++
-CFLAGS = -w
+CFLAGS = -w -g
 
 BIN = 1.exe
 

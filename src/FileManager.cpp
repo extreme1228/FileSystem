@@ -598,6 +598,7 @@ Inode* FileManager::MakNode( unsigned int mode )
 
 	/* 分配一个空闲DiskInode，里面内容已全部清空 */
 	pInode = this->m_FileSystem->IAlloc();
+	
 	if( NULL ==	pInode )
 	{
 		return NULL;

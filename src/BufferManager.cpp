@@ -110,11 +110,6 @@ Buf* BufferManager::Bread(int blkno)
 	return bp;
 }
 
-Buf* BufferManager::Breada(short adev, int blkno, int rablkno)
-{
-	//nothing to do here
-}
-
 void BufferManager::Bwrite(Buf *bp)
 {
 	unsigned int flags;
@@ -134,6 +129,7 @@ void BufferManager::Bwrite(Buf *bp)
     this->bFreeList.b_back->b_forw = bp;
     bp->b_forw = &this->bFreeList;
     this->bFreeList.b_back = bp;
+
 
 	return;
 }
@@ -155,13 +151,13 @@ void BufferManager::Bdwrite(Buf *bp)
 	return;
 }
 
-void BufferManager::Bawrite(Buf *bp)
-{
-	/* 标记为异步写 */
-	bp->b_flags |= Buf::B_ASYNC;
-	this->Bwrite(bp);
-	return;
-}
+// void BufferManager::Bawrite(Buf *bp)
+// {
+// 	/* 标记为异步写 */
+// 	bp->b_flags |= Buf::B_ASYNC;
+// 	this->Bwrite(bp);
+// 	return;
+// }
 
 void BufferManager::ClrBuf(Buf *bp)
 {
@@ -180,7 +176,9 @@ void BufferManager::Bflush()
     //刷新操作，将所有延迟写的缓存写回磁盘
 	Buf* bp;
 	for(int i=0;i<NBUF;i++){
+		bp = this->m_Buf + i;
         if(bp->b_flags & Buf::B_DELWRI){
+			// printf("debug666 id = %d\n",i);
             this->Bwrite(bp);
         }
     }
@@ -204,18 +202,6 @@ void BufferManager::NotAvail(Buf *bp)
 	return;
 }
 
-Buf* BufferManager::InCore(short adev, int blkno)
-{
-	Buf* bp;
-	Buf* dp =&(this->bFreeList);
-
-	for(bp = dp->b_forw; bp != (Buf *)dp; bp = bp->b_forw)
-	{
-		if(bp->b_blkno == blkno)
-			return bp;
-	}
-	return NULL;
-}
 
 Buf& BufferManager::GetBFreeList()
 {

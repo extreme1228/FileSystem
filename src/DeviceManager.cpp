@@ -48,10 +48,9 @@ void DeviceManager::Initialize()
         }
 
         //数据区域初始化
-        unsigned char data_buf[FileSystem::BLOCK_SIZE];
-        unsigned char tmp_spb[FileSystem::BLOCK_SIZE];
-        memset(data_buf, 0, FileSystem::BLOCK_SIZE);
-        memset(tmp_spb, 0, FileSystem::BLOCK_SIZE);
+        unsigned char data_buf[FileSystem::BLOCK_SIZE] = {0};
+        unsigned char tmp_spb[FileSystem::BLOCK_SIZE] = {0};
+
 
         //按照分组链式索引方法，分配空闲数据盘块和对应的SuperBlock
         m_spb.s_nfree = 99;
@@ -60,7 +59,7 @@ void DeviceManager::Initialize()
             m_spb.s_free[i+1] = i + FileSystem::DATA_ZONE_START_SECTOR;
             fwrite(data_buf, FileSystem::BLOCK_SIZE, 1, m_DiskFile);
         }
-        memcpy(tmp_spb, &m_spb.s_nfree, sizeof(int)*101);
+        memcpy(tmp_spb, &(m_spb.s_nfree), sizeof(int)*101);
         fwrite(tmp_spb, FileSystem::BLOCK_SIZE, 1, m_DiskFile);
         //以上完成了第一个SuperBlock和其对应的空闲数据块的初始化，后续循环进行即可
 
@@ -68,7 +67,7 @@ void DeviceManager::Initialize()
         m_spb.s_free[0] = FileSystem::DATA_ZONE_START_SECTOR + 99;//指向第一个SuperBlock
         for(int i=100;i<FileSystem::DATA_ZONE_SIZE;i++){
             if(m_spb.s_nfree >= 100){
-                memcpy(tmp_spb, &m_spb, sizeof(int)*101);
+                memcpy(tmp_spb, &(m_spb.s_nfree), sizeof(int)*101);
                 fwrite(tmp_spb, FileSystem::BLOCK_SIZE, 1, m_DiskFile);
                 m_spb.s_nfree = 0;
             }
@@ -102,6 +101,7 @@ void DeviceManager::IO_read(Buf* bp)
     fread(bp->b_addr, bp->b_wcount, 1, m_DiskFile);
     bp->b_flags &= ~(Buf::B_READ);
 	bp->b_flags |= Buf::B_DONE;
+    // printf("read from no.%d block\n", bp->b_blkno);
 }
 
 //这里的IO_write是将高速缓冲块中的内容写入了磁盘的对应地址
@@ -111,4 +111,5 @@ void DeviceManager::IO_write(Buf* bp)
     fwrite(bp->b_addr, bp->b_wcount, 1, m_DiskFile);
     bp->b_flags &= ~(Buf::B_WRITE);
     bp->b_flags |= Buf::B_DONE;
+    // printf("write to no.%d block\n", bp->b_blkno);
 }

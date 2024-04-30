@@ -249,6 +249,7 @@ void Command::Fin(char*out_file_name,char*in_file_name)
 	}
 	fclose(fp);
 	Fclose(fd);
+	printf("file %s read succesfully to %s\n",out_file_name,in_file_name);
 	return ;
 }
 void Command::Fout(char*in_file_name,char*out_file_name)
@@ -269,6 +270,7 @@ void Command::Fout(char*in_file_name,char*out_file_name)
 	}
 	Fclose(fd);
 	fclose(fp);
+	printf("file %s write succesfully to %s\n",in_file_name,out_file_name);
 	return ;
 }
 int Command::analyze(char * buf)
@@ -349,7 +351,7 @@ int Command::analyze(char * buf)
 			printf("Permission denied,do not have access to read\n");
 		}
 		else{
-			printf("Read succeesfully,read data:\n");
+			printf("Read succesfully,read data:\n");
 			printf("%s\n",data);
 		}
 		return OK;
@@ -366,7 +368,7 @@ int Command::analyze(char * buf)
 			printf("No such or directory\n");
 		}
 		else{
-			printf("Write succeesfully\n");
+			printf("Write succesfully\n");
 		}
 		return OK;
 	}
@@ -381,7 +383,7 @@ int Command::analyze(char * buf)
 			printf("No such or directory\n");
 		}
 		else{
-			printf("File seek succeesfully\n");
+			printf("File seek succesfully\n");
 		}
 		return OK;
 	}

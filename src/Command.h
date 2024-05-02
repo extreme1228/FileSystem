@@ -2,6 +2,7 @@
 #include"stdio.h"
 #include "string.h"
 #include <cstdlib> 
+#include "Utility.h"
 
 #define EXIT_CMD -1
 #define OK 1

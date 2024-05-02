@@ -2,7 +2,7 @@
 CC = g++
 CFLAGS = -w -g
 
-BIN = 1.exe
+BIN = ..\\bin\\FileSystem.exe
 
 $(BIN): main.o BufferManager.o DeviceManager.o File.o FileManager.o FileSystem.o INode.o OpenFileManager.o Utility.o Kernel.o Command.o
 	$(CC) -o $@ $^
@@ -32,4 +32,4 @@ Command.o:Command.cpp
 .PHONY:clean
 clean:
 	-del *.o $(BIN)
-	-del *.img
+	-del ..\\bin\\*.img

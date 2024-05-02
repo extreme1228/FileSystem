@@ -36,35 +36,35 @@ void Command::exit()
 
 void Command::FFormat()
 {
-	// printf("Are you sure to fromat the filesystem?(All data will be cleared in the disk)[y/n]\n");
-	// char buf[64];
-	// scanf("%s",buf);
-	// if(strcmp(buf,"y") == 0){
-	// 	printf("FileSystem Formatting...\n");
-	// 	DeviceManager *device_m = &Kernel::Instance().GetDeviceManager();
-	// 	device_m ->FormatDisk();
-	// 	Kernel::Instance().Initialize();
-	// 	printf("Initialize System...");
-	// 	FileManager *fileManager = &Kernel::Instance().GetFileManager();
-	// 	fileManager->rootDirInode = g_InodeTable.IGet(FileSystem::ROOTINO);
-	// 	Kernel::Instance().GetFileSystem().LoadSuperBlock();
-	// 	User *u = &Kernel::Instance().GetUser();
-	// 	u->u_error = User::NOERROR;
-	// 	u->u_cdir = g_InodeTable.IGet(FileSystem::ROOTINO);
-	// 	u->u_pdir = NULL;
-	// 	strcpy(u->u_curdir, "/");
-	// 	u->u_dirp = "/";
-	// 	memset(u->u_arg, 0, sizeof(u->u_arg));
-	// 	printf("Done.\n");
-	// 	return ;
-	// }
-	// else if(strcmp(buf,"n") == 0){
-	// 	return ;
-	// }
-	// else{
-	// 	printf("Unknown command \"%s\" !\n");
-	// 	return ;
-	// }
+	printf("Are you sure to fromat the filesystem?(All data will be cleared in the disk)[y/n]\n");
+	char buf[64];
+	scanf("%s",buf);
+	if(strcmp(buf,"y") == 0){
+		printf("FileSystem Formatting...\n");
+		DeviceManager *device_m = &Kernel::Instance().GetDeviceManager();
+		device_m ->FormatDisk();
+		Kernel::Instance().Initialize();
+		printf("Initialize System...");
+		FileManager *fileManager = &Kernel::Instance().GetFileManager();
+		fileManager->rootDirInode = g_InodeTable.IGet(FileSystem::ROOTINO);
+		Kernel::Instance().GetFileSystem().LoadSuperBlock();
+		User *u = &Kernel::Instance().GetUser();
+		u->u_error = User::NOERROR;
+		u->u_cdir = g_InodeTable.IGet(FileSystem::ROOTINO);
+		u->u_pdir = NULL;
+		strcpy(u->u_curdir, "/");
+		u->u_dirp = "/";
+		memset(u->u_arg, 0, sizeof(u->u_arg));
+		printf("Done.\n");
+		return ;
+	}
+	else if(strcmp(buf,"n") == 0){
+		return ;
+	}
+	else{
+		printf("Unknown command \"%s\" !\n");
+		return ;
+	}
 }
 
 void Command::mkdir(char*dir_name)
@@ -86,11 +86,38 @@ void Command::mkdir(char*dir_name)
 	return ;
 }
 
+void get_fa_dir(char*dir_name)
+{
+	// printf("debug\n");
+	if(strcmp(dir_name,"/") == 0){
+		//root dir not have fa dir
+		return;
+	}
+	int len = strlen(dir_name);
+	int pos = len - 1;
+	while(pos>=0 && dir_name[pos] != '/'){
+		pos--;
+	}
+	if(pos == 0){
+		dir_name[pos+1] = '\0';
+	}
+	else{
+		dir_name[pos] = '\0';
+	}
+	// printf("dir = %s\n",dir_name);
+	return;
+
+}
 void Command::cd()
 {
+	User *u = &Kernel::Instance().GetUser();
 	char dir_name[64];
 	scanf("%s",dir_name);
-	User *u = &Kernel::Instance().GetUser();
+	//特判进入父目录
+	if(strcmp(dir_name,"..") == 0){
+		strcpy(dir_name,u->u_curdir);
+		get_fa_dir(dir_name);
+	}
 	//传入系统调用参数
 	u->system_ret = 0;
 	u->u_dirp = dir_name;
@@ -338,9 +365,9 @@ int Command::analyze(char * buf)
 	}
 	else if(strcmp(buf,"fread") == 0){
 		int fd,len;
-		char data[1024] = {0};
+		char data[2048] = {'\0'};
 		scanf("%d %d",&fd,&len);
-		Fread(fd,data,len);
+		int read_bytes = Fread(fd,data,len);
 		if(u->u_error == User::EBADF){
 			printf("fd value is out of limit\n");
 		}
@@ -351,7 +378,8 @@ int Command::analyze(char * buf)
 			printf("Permission denied,do not have access to read\n");
 		}
 		else{
-			printf("Read succesfully,read data:\n");
+			printf("Read succesfully,read data length is %d bytes\n",read_bytes);
+			printf("read data:\n");
 			printf("%s\n",data);
 		}
 		return OK;
@@ -360,7 +388,9 @@ int Command::analyze(char * buf)
 		int fd,len;
 		char data[1024];
 		scanf("%d",&fd);scanf("%s",data);scanf("%d",&len);
-		Fwrite(fd,data,len);
+		int data_len = strlen(data);
+		len = Utility::Min(len,data_len);
+		int write_bytes = Fwrite(fd,data,len);
 		if(u->u_error == User::EBADF){
 			printf("fd value is out of limit\n");
 		}
@@ -368,7 +398,7 @@ int Command::analyze(char * buf)
 			printf("No such or directory\n");
 		}
 		else{
-			printf("Write succesfully\n");
+			printf("Write succesfully,write data length is %d bytes\n",write_bytes);
 		}
 		return OK;
 	}

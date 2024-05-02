@@ -10,6 +10,9 @@
 #include <cstdlib>
 #include "Command.h"
 #include "Kernel.h"
+#include "time.h"
+const int update_freq = 100;
+
 void Init()
 {
     printf("UNIX FILESYSTEM INITIALIZING...\n");
@@ -43,7 +46,15 @@ int main()
     //内核启动，进行初始化相关工作
     printf("Welcome!\n");
     printf("You can type \"help\" to get more information about the filesystem!\n");
+    time_t start_t = time(0);
     while(true){
+        time_t now_t = time(0);
+        if((now_t - start_t) % update_freq == 0){
+            //每100s将内存中的内容更新到磁盘，以防出现错误异常退出时，磁盘无任何数据保留
+            FileSystem *file_m = &Kernel::Instance().GetFileSystem();
+            //将内存中的SuperBlock同步到磁盘
+            file_m -> Update();
+        }
         printf("root@%s:~%s$ ",computerName,u->u_curdir);
         u->u_error = User::NOERROR;
         

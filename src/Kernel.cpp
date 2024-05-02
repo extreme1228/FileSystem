@@ -62,11 +62,6 @@ void Kernel::InitUser()
 
 void Kernel::Initialize()
 {
-	// g_BufferManager = BufferManager();
-	// g_DeviceManager = DeviceManager();
-	// g_FileSystem = FileSystem();
-	// g_FileManager = FileManager();
-	// g_User = User();
     InitDevice();
     InitUser();
 	InitFileManager();

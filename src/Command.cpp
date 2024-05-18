@@ -331,7 +331,7 @@ int Command::analyze(char * buf)
 			printf("file %s exist!\n",file_name);
 		}
 		else if(u -> system_ret <0){
-			printf("file %s ceate error\n",file_name);
+			printf("file %s create error\n",file_name);
 		}
 		else{
 			printf("file %s create correct, return fd = %d\n",file_name,u->system_ret);

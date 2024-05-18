@@ -62,8 +62,6 @@ public:
 public:
 	//系统调用返回值
     int system_ret;
-
-
 	int u_arg[5];				/* 存放当前系统调用参数 */
 	char* u_dirp;				/* 系统调用参数(一般用于Pathname)的指针 */
 
